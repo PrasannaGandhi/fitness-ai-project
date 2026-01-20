@@ -1,78 +1,142 @@
-// Filename: Login.jsx
+
+
+
+
 
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [isForgot, setIsForgot] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleAuth = (e) => {
     e.preventDefault();
-    try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', formData);
+    setError(""); // Clear previous errors
 
-      // ✅ Store token immediately after successful login
-      localStorage.setItem('token', res.data.token);
+    if (isForgot) {
+      alert("Reset link sent to your email!");
+      setIsForgot(false);
+    } else {
+      // 1. Get user data from localStorage (stored during Signup)
+      const storedUser = JSON.parse(localStorage.getItem("userCredentials"));
 
-      console.log(res.data);
-      alert('Login successful!');
+      // 2. Validation Logic
+      if (!storedUser) {
+        setError("No account found with this email. Please sign up.");
+        return;
+      }
 
-      // ✅ Optional: small delay ensures token is written before navigation
-      setTimeout(() => navigate('/dashboard'), 300);
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-      alert('Login failed. Invalid credentials.');
+      if (storedUser.email !== email || storedUser.password !== password) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      // 3. Successful Login
+      localStorage.setItem("userName", storedUser.name || "User");
+      navigate('/dashboard');
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-      <form
-        onSubmit={handleSubmit}
-        className="p-8 bg-gray-800 rounded-lg shadow-lg w-full max-w-md"
-      >
-        <h2 className="text-3xl font-bold mb-6 text-center">Login</h2>
+    <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center p-6 selection:bg-purple-500/30">
+      <div className="w-full max-w-md bg-[#121826] border border-gray-800 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        {/* Decorative background glow */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-purple-600/10 rounded-full blur-[80px]"></div>
 
-        <div className="mb-4">
-          <label className="block text-gray-400">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+        <div className="text-center mb-8 relative z-10">
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {isForgot ? "Reset Password" : "Welcome Back"}
+          </h2>
+          <p className="text-gray-400 text-sm">
+            {isForgot ? "Enter your email to receive a reset link" : "Login to your FitAI coach"}
+          </p>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-400">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
+        {error && (
+          <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-400/10 p-3 rounded-xl border border-red-400/20 text-sm animate-shake">
+            <AlertCircle size={16} /> {error}
+          </div>
+        )}
 
-        <button
-          type="submit"
-          className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-300"
-        >
-          Log In
-        </button>
-      </form>
+        <form onSubmit={handleAuth} className="space-y-4 relative z-10">
+          <div className="space-y-1">
+            <input 
+              type="email" 
+              placeholder="Email Address" 
+              className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
+          </div>
+          
+          {!isForgot && (
+            <>
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="Password" 
+                  className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                />
+                {/* Eye Icon Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              <div className="flex justify-between items-center px-1">
+                <label className="flex items-center gap-2 text-gray-400 text-sm cursor-pointer group">
+                  <input type="checkbox" className="accent-purple-500 w-4 h-4 rounded border-gray-700 bg-black" />
+                  <span className="group-hover:text-gray-300 transition-colors">Remember Me</span>
+                </label>
+                <span 
+                  onClick={() => setIsForgot(true)} 
+                  className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer font-medium"
+                >
+                  Forgot password?
+                </span>
+              </div>
+            </>
+          )}
+          
+          <button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all mt-4 shadow-lg shadow-purple-500/20">
+            {isForgot ? "Send Reset Link" : "Login"}
+          </button>
+        </form>
+
+        <div className="text-center mt-8 relative z-10">
+          <div className="text-gray-500 text-sm">
+            {isForgot ? (
+              <span onClick={() => setIsForgot(false)} className="text-purple-400 cursor-pointer hover:underline">
+                Back to Login
+              </span>
+            ) : (
+              <p>
+                Don’t have an account?{" "}
+                <span 
+                  onClick={() => navigate('/signup')} 
+                  className="text-purple-400 cursor-pointer hover:underline font-bold"
+                >
+                  Sign up
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

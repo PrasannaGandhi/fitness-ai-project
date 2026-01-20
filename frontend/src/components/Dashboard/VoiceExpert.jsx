@@ -1,138 +1,56 @@
-import React, { useState, useRef } from "react";
-import axios from "axios";
+
+
+
+
+
+
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Mic, MicOff, Volume2, Settings } from 'lucide-react';
 
 const VoiceExpert = () => {
-  const [status, setStatus] = useState("Ready to record");
-  const [isListening, setIsListening] = useState(false);
-  const [transcribedText, setTranscribedText] = useState("");
-  const [expertReply, setExpertReply] = useState("");
-  const [recordingTime, setRecordingTime] = useState(0);
-
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const timerRef = useRef(null);
-
-  // 🎙️ Start Recording
-  const handleStart = async () => {
-    try {
-      setTranscribedText("");
-      setExpertReply("");
-      setStatus("Listening...");
-      setIsListening(true);
-      setRecordingTime(0);
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-
-      audioChunksRef.current = [];
-
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorderRef.current.start();
-
-      // Show recording duration
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    } catch (err) {
-      console.error("Microphone access error:", err);
-      setStatus("Microphone not accessible ❌");
-    }
-  };
-
-  // 🛑 Stop Recording & Send to Backend
-  const handleStopAndSend = async () => {
-    if (!isListening) return;
-    setIsListening(false);
-    setStatus("Processing audio...");
-    clearInterval(timerRef.current);
-
-    mediaRecorderRef.current.stop();
-
-    mediaRecorderRef.current.onstop = async () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "recording.wav");
-
-      try {
-        const res = await axios.post(
-          "http://localhost:5000/api/expert/voice",
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
-        );
-
-        setTranscribedText(res.data.transcribedText);
-        setExpertReply(res.data.expertReply);
-        setStatus("Response received ✅");
-      } catch (err) {
-        console.error(err);
-        setStatus("Error processing audio ❌");
-      }
-    };
-  };
+  const navigate = useNavigate();
+  const [isActive, setIsActive] = useState(false);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-green-400 p-6">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md text-center border border-gray-700">
-        <h1 className="text-2xl font-bold mb-6 text-green-300">🎙️ Voice Expert</h1>
+    <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center">
+      <div className="w-full max-w-4xl">
+        <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-gray-400 hover:text-white mb-12">
+          <ArrowLeft size={20} /> Dashboard
+        </button>
 
-        {/* Mic Animation */}
-        <div className="flex flex-col items-center mb-4">
-          <div
-            className={`w-16 h-16 rounded-full mb-2 transition-all ${
-              isListening ? "bg-red-500 animate-pulse shadow-lg shadow-red-500/50" : "bg-gray-600"
-            }`}
-          ></div>
-          <p className="text-sm text-gray-400">
-            {isListening ? `Listening... (${recordingTime}s)` : "Mic is off"}
-          </p>
+        <div className="text-center mb-16">
+          <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 transition-all duration-500 ${isActive ? 'bg-purple-600 shadow-[0_0_50px_rgba(147,51,234,0.5)] scale-110' : 'bg-gray-900 border border-gray-800'}`}>
+            {isActive ? <Mic size={48} className="animate-pulse" /> : <MicOff size={48} className="text-gray-600" />}
+          </div>
+          <h1 className="text-4xl font-bold mb-4">Voice <span className="text-purple-500">Expert</span></h1>
+          <p className="text-gray-400 max-w-md mx-auto">Hands-free control for your workout. Command the AI to start, stop, or provide form feedback.</p>
         </div>
 
-        {/* Status */}
-        <p className="text-lg mb-6">
-          <span className="font-semibold text-green-300">Status:</span>{" "}
-          <span className="text-white">{status}</span>
-        </p>
-
-        {/* Buttons */}
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={handleStart}
-            disabled={isListening}
-            className={`px-5 py-2 rounded-lg font-semibold transition ${
-              isListening
-                ? "bg-green-700 opacity-50 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
-          >
-            Start Talking
-          </button>
-
-          <button
-            onClick={handleStopAndSend}
-            disabled={!isListening}
-            className={`px-5 py-2 rounded-lg font-semibold transition ${
-              !isListening
-                ? "bg-red-700 opacity-50 cursor-not-allowed"
-                : "bg-red-600 hover:bg-red-700"
-            }`}
-          >
-            Stop & Send
-          </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Volume2 size={18} className="text-purple-500"/> Voice Commands</h3>
+            <ul className="text-sm text-gray-400 space-y-3">
+              <li>"Hey FitAI, start my workout"</li>
+              <li>"How is my posture?"</li>
+              <li>"Next exercise"</li>
+              <li>"Pause session"</li>
+            </ul>
+          </div>
+          <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Settings size={18} className="text-purple-500"/> Expert Settings</h3>
+            <p className="text-sm text-gray-400 mb-4">Voice Gender: Female (Sarah)</p>
+            <button className="text-xs text-purple-400 font-bold uppercase tracking-widest">Change Settings</button>
+          </div>
         </div>
 
-        {/* Expert Response */}
-        <div className="bg-gray-700 p-4 rounded-lg text-left text-white">
-          <h2 className="font-semibold text-green-300 mb-2">🗣️ Transcribed Text:</h2>
-          <p className="mb-4">{transcribedText || "No transcription yet."}</p>
-
-          <h2 className="font-semibold text-green-300 mb-2">💡 Expert Reply:</h2>
-          <p>{expertReply || "No reply yet."}</p>
-        </div>
+        <button 
+          onClick={() => setIsActive(!isActive)}
+          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${isActive ? 'bg-red-500/10 text-red-500 border border-red-500/50' : 'bg-purple-600 text-white'}`}
+        >
+          {isActive ? "Deactivate Voice Control" : "Activate Hands-Free Mode"}
+        </button>
       </div>
     </div>
   );

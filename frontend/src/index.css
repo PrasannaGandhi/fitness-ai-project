@@ -1,4 +1,4 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
 @tailwind utilities;
 :root {
@@ -21,7 +21,7 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  background-color: #111827; /* same as bg-gray-900 */
+  background-color: #111827; 
   overflow-x: hidden;
 }
 
@@ -78,4 +78,67 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+.btn-primary {
+  @apply px-6 py-3 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-100 transition;
+}
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ @tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Force background to black to prevent white/blue flashes */
+body {
+  background-color: #000000;
+  color: #ffffff;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

@@ -1,72 +1,137 @@
+
+
+
+
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const Signup = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    fitnessGoal: '',
-    weight: '',
-    height: ''
-  });
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [showRePass, setShowRePass] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    pass: "",
+    rePass: ""
+  });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
-      console.log(res.data);
-      alert('Registration successful! You can now log in.');
-      navigate('/login');
-    } catch (err) {
-      console.error(err.response.data);
-      alert('Registration failed. Please check your details.');
+    setError(""); // Reset error
+
+    // Validation: Check if passwords match
+    if (formData.pass !== formData.rePass) {
+      setError("Passwords do not match. Please try again.");
+      return;
     }
+
+    // Validation: Name length
+    if (formData.name.length < 2) {
+      setError("Please enter a valid name.");
+      return;
+    }
+
+    // SAVING DATA FOR LOGIN CHECKING
+    // We save an object containing email and password so Login.jsx can verify them
+    const userCredentials = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.pass
+    };
+    
+    localStorage.setItem("userCredentials", JSON.stringify(userCredentials));
+    localStorage.setItem("userName", formData.name);
+    
+    // Redirect to login
+    navigate('/login'); 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-      <form onSubmit={handleSubmit} className="p-8 bg-gray-800 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold mb-6 text-center">Create Your Account</h2>
-        <div className="mb-4">
-          <label className="block text-gray-400">Name</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+    <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center p-6 selection:bg-purple-500/30">
+      <div className="w-full max-w-md bg-[#121826] border border-gray-800 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        
+        {/* Background Decoration */}
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-600/10 rounded-full blur-[80px]"></div>
+
+        <div className="text-center mb-8 relative z-10">
+          <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
+          <p className="text-gray-400 text-sm">Join the FitAI revolution</p>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-400">Email</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-400">Password</label>
-          <input type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-400">Fitness Goal</label>
-          <select name="fitnessGoal" value={formData.fitnessGoal} onChange={handleChange} className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            <option value="">Select a Goal</option>
-            <option value="lose_weight">Lose Weight</option>
-            <option value="gain_muscle">Gain Muscle</option>
-            <option value="maintain">Maintain</option>
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-400">Weight (kg)</label>
-          <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-400">Height (cm)</label>
-          <input type="number" name="height" value={formData.height} onChange={handleChange} className="w-full px-4 py-2 mt-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-        </div>
-        <button type="submit" className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-300">
-          Sign Up
-        </button>
-      </form>
+
+        {error && (
+          <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-400/10 p-3 rounded-xl border border-red-400/20 text-sm animate-pulse">
+            <AlertCircle size={16} /> {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+          {/* Name Input */}
+          <input 
+            type="text" 
+            placeholder="Full Name" 
+            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all" 
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            required 
+          />
+
+          {/* Email Input */}
+          <input 
+            type="email" 
+            placeholder="Email Address" 
+            className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all" 
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            required 
+          />
+
+          {/* Password Input with Eye */}
+          <div className="relative">
+            <input 
+              type={showPass ? "text" : "password"} 
+              placeholder="Password" 
+              className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all" 
+              onChange={(e) => setFormData({...formData, pass: e.target.value})}
+              required 
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+            >
+              {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          {/* Re-enter Password Input with Eye */}
+          <div className="relative">
+            <input 
+              type={showRePass ? "text" : "password"} 
+              placeholder="Re-enter Password" 
+              className={`w-full bg-black/40 border ${formData.rePass && formData.pass !== formData.rePass ? 'border-red-500' : 'border-gray-700'} rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all`} 
+              onChange={(e) => setFormData({...formData, rePass: e.target.value})}
+              required 
+            />
+            <button
+              type="button"
+              onClick={() => setShowRePass(!showRePass)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+            >
+              {showRePass ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          
+          <button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all mt-4 shadow-lg shadow-purple-500/20">
+            Sign Up
+          </button>
+        </form>
+
+        <p className="text-center text-gray-500 mt-8 text-sm relative z-10">
+          Already have an account? <span onClick={() => navigate('/login')} className="text-purple-400 cursor-pointer hover:underline font-bold">Login</span>
+        </p>
+      </div>
     </div>
   );
 };
