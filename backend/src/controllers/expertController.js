@@ -1,104 +1,163 @@
-const axios = require("axios");
-const FormData = require("form-data");
-const fs = require("fs");
+const FormData     = require("form-data");
+const fs           = require("fs");
+const axios        = require("axios");
+const User         = require("../models/User");
+const MealProgress = require("../models/MealProgress");
+const FitnessPlan  = require("../models/FitnessPlan");
 
-// Python service endpoint
-const PYTHON_TRANSCRIBE_URL = "http://localhost:5001/stt";
+// ============================================================
+// ✅ CHANGE MODEL HERE ONLY — affects entire file
+// ============================================================
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const AI_MODEL       = "meta-llama/llama-3-8b-instruct";
+// Other options: "meta-llama/llama-3-8b-instruct" | "mistralai/mistral-7b-instruct"
 
-// 🧠 Smart Hybrid Fitness AI Response System
-const getExpertResponse = (text) => {
-  if (!text) return "Sorry, I didn’t catch that. Could you please repeat?";
-  text = text.toLowerCase();
+const PYTHON_STT_URL = "http://localhost:5001/stt";
 
-  // --- Contextual fitness knowledge base ---
-  const responses = {
-    diet: "A balanced diet is 70% of your results! Focus on whole foods, lean protein, and avoid processed sugars. Plan your meals to match your fitness goals.",
-    calories: "Your caloric intake should align with your goals. For fat loss, eat 400–500 calories below maintenance. For muscle gain, go 300–400 above.",
-    protein: "Protein helps repair and grow muscles. Include sources like eggs, chicken, fish, paneer, and lentils after every workout.",
-    workout: "Stay consistent! Mix cardio, strength, and flexibility work. Train each muscle group twice a week for steady progress.",
-    weights: "Start with compound lifts like squats, bench press, and deadlifts. Increase weights gradually — form always matters more than load.",
-    cardio: "For stamina and fat loss, try HIIT or brisk walking 4–5 times a week. Cardio supports heart health and recovery.",
-    sleep: "Sleep rebuilds muscles and regulates hormones. Try to maintain 7–9 hours daily — quality sleep equals better recovery.",
-    water: "Hydration improves energy, focus, and fat metabolism. Drink 3–4 liters a day, especially before and after workouts.",
-    stress: "Too much stress raises cortisol, which slows progress. Include meditation, light yoga, or outdoor walks to manage it.",
-    motivation: "Remind yourself why you started. Track small wins, listen to motivating playlists, and surround yourself with positive energy.",
-    muscleGain: "Lift progressively, eat a high-protein surplus diet, and rest properly. Patience and discipline are the real growth hacks!",
-    fatLoss: "Go for sustainable fat loss. Focus on calorie deficit, resistance training, and sleep. Avoid crash diets.",
-    warmup: "Do 5–10 minutes of mobility drills and light cardio before lifting. Stretch after workouts to prevent stiffness.",
-    recovery: "Active recovery helps! Try walking, yoga, or foam rolling. Rest is when your body actually grows stronger.",
-  };
-
-  // --- Expanded keyword detection ---
-  const matched = [];
-
-  const keywordGroups = {
-    diet: ["diet", "food", "meal", "nutrition", "eat"],
-    calories: ["calorie", "deficit", "surplus", "tdee"],
-    protein: ["protein", "supplement", "whey", "shake"],
-    workout: ["workout", "exercise", "training", "gym"],
-    weights: ["weight", "lift", "strength", "muscle", "resistance"],
-    cardio: ["cardio", "run", "jog", "hiit", "treadmill"],
-    sleep: ["sleep", "rest", "nap", "recovery night"],
-    water: ["water", "drink", "hydration", "hydrate"],
-    stress: ["stress", "anxiety", "mental", "burnout"],
-    motivation: ["motivation", "lazy", "focus", "tired", "inspire"],
-    muscleGain: ["gain muscle", "build muscle", "bulk", "strength gain"],
-    fatLoss: ["lose fat", "fat loss", "cutting", "slim"],
-    warmup: ["warm up", "warmup", "stretch", "mobility"],
-    recovery: ["recovery", "rest day", "healing", "soreness"],
-  };
-
-  for (const [key, keywords] of Object.entries(keywordGroups)) {
-    if (keywords.some(k => text.includes(k))) matched.push(key);
-  }
-
-  // --- Multi-intent combined advice ---
-  if (matched.length > 1) {
-    const advice = matched.map(key => `• ${responses[key]}`).join("\n\n");
-    return `Here’s a custom fitness combo based on your question:\n\n${advice}\n\nStay disciplined and enjoy the process! 💪`;
-  }
-
-  // --- Single intent ---
-  if (matched.length === 1) {
-    return responses[matched[0]];
-  }
-
-  // --- Fallback ---
-  return "That’s a great question! Try being a bit more specific — for example, ask about diet, motivation, recovery, or workouts.";
+const callAI = async (messages, maxTokens = 400) => {
+  const res = await axios.post(
+    OPENROUTER_URL,
+    {
+      model:      AI_MODEL,
+      messages,
+      temperature: 0.5,
+      max_tokens:  maxTokens
+    },
+    {
+      headers: {
+        Authorization:  `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:5173",
+        "X-Title":      "FitAI App"
+      },
+      timeout: 20000
+    }
+  );
+  return res.data.choices?.[0]?.message?.content?.trim() || "";
 };
 
-// 🎤 Voice Query Controller
-exports.handleVoiceQuery = async (req, res) => {
+// ============================================================
+// BUILD USER CONTEXT
+// ============================================================
+const buildUserContext = async (userId) => {
+  if (!userId) return "";
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No audio file provided" });
+    const user  = await User.findById(userId);
+    const meals = await MealProgress.find({ user: userId });
+    const plan  = await FitnessPlan.findOne({ user: userId });
+    const totalCalories = meals.reduce((s, m) => s + (m.calories || 0), 0);
+    const dayMap    = [6,0,1,2,3,4,5];
+    const todayKey  = `day${dayMap[new Date().getDay()] + 1}`;
+    const todayWorkout = plan?.plan?.workout_plan?.[todayKey] || {};
+    return `
+USER PROFILE:
+Name: ${user?.name}, Height: ${user?.height}cm, Weight: ${user?.weight}kg
+Age: ${user?.age}, Gender: ${user?.gender}, Goal: ${user?.fitnessGoal}
+Calories today: ${totalCalories} kcal
+Today's workout: ${todayWorkout.exercise || "Not set"}
+Exercises: ${(todayWorkout.exercises || []).slice(0, 3).join(", ")}
+`;
+  } catch { return ""; }
+};
+
+// ============================================================
+// FITAI CHAT — bullet point replies
+// ============================================================
+exports.handleChatQuery = async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: "Message required" });
+
+    const userContext = await buildUserContext(req.user?.id);
+
+    const reply = await callAI([
+      {
+        role: "system",
+        content: `You are FitAI Coach — a smart fitness assistant.
+
+${userContext}
+
+STRICT REPLY FORMAT:
+• Always reply using bullet points with "•" character
+• Maximum 5 bullets per reply
+• Each bullet: ONE short sentence under 15 words
+• End with ONE motivating sentence (no bullet)
+• Use user's actual profile numbers when relevant
+• Never write paragraphs or walls of text`
+      },
+      { role: "user", content: message }
+    ], 300);
+
+    return res.json({ reply });
+
+  } catch (err) {
+    console.error("Chat error:", err.message);
+    return res.status(500).json({ error: "Chat error. Please try again." });
+  }
+};
+
+// ============================================================
+// VOICE EXPERT — transcribe + AI response
+// ============================================================
+exports.handleVoiceQuery = async (req, res) => {
+  let audioPath = null;
+  try {
+    if (!req.file) return res.status(400).json({ error: "No audio file provided" });
+
+    audioPath = req.file.path;
+
+    // Health check Python STT service
+    try {
+      await axios.get("http://localhost:5001/health", { timeout: 3000 });
+    } catch {
+      return res.status(503).json({
+        error: "Voice service offline. Please start the Python STT server."
+      });
     }
 
-    const audioPath = req.file.path;
+    // Transcribe audio
     const formData = new FormData();
     formData.append("audio", fs.createReadStream(audioPath));
 
-    console.log("🎤 Sending audio to Python STT service...");
-
-    // Send audio to Python service for transcription
-    const response = await axios.post(PYTHON_TRANSCRIBE_URL, formData, {
-      headers: formData.getHeaders(),
+    const sttRes = await axios.post(PYTHON_STT_URL, formData, {
+      headers:  formData.getHeaders(),
+      timeout:  20000
     });
 
-    console.log("✅ Python service responded:", response.data);
+    const transcribedText = sttRes.data?.text?.trim();
+    if (!transcribedText) {
+      return res.status(400).json({ error: "Could not understand audio. Speak clearly and try again." });
+    }
 
-    const { text } = response.data;
-    const expertResponse = getExpertResponse(text);
+    console.log("✅ Transcribed:", transcribedText);
 
-    res.json({
-      transcribedText: text,
-      expertReply: expertResponse,
-    });
+    // AI response
+    const userContext = await buildUserContext(req.user?.id);
 
-    // Cleanup temp file
-    fs.unlink(audioPath, () => {});
-  } catch (error) {
-    console.error("❌ Error handling voice query:", error.message);
-    res.status(500).json({ error: "Error processing audio" });
+    const expertReply = await callAI([
+      {
+        role: "system",
+        content: `You are FitAI Voice Coach — a fitness expert answering spoken questions.
+
+${userContext}
+
+VOICE REPLY RULES:
+- Answer ONLY the specific question asked
+- 3-5 plain sentences maximum
+- Use user's profile data (weight, goal) when relevant
+- NO bullet points, NO markdown — plain sentences only
+- Conversational tone — this will be read aloud
+- Be specific, confident and motivating`
+      },
+      { role: "user", content: transcribedText }
+    ], 200);
+
+    return res.json({ transcribedText, expertReply });
+
+  } catch (err) {
+    console.error("Voice error:", err.message);
+    return res.status(500).json({ error: err.message || "Voice processing failed" });
+  } finally {
+    if (audioPath && fs.existsSync(audioPath)) fs.unlink(audioPath, () => {});
   }
 };

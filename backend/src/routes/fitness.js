@@ -1,10 +1,17 @@
-const express = require('express');
-const { getFitnessPlan } = require('../controllers/fitnessController');
-const auth = require('../middleware/authMiddleware'); // You need to create this middleware next!
+const express = require("express");
+const {
+  getFitnessPlan,
+  getDayWorkout,
+  getDietPlan,
+  regeneratePlan
+} = require("../controllers/fitnessController");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Route to get the user's personalized fitness plan. Requires JWT authentication.
-router.get('/plan', auth, getFitnessPlan);
+router.get("/plan",         auth, getFitnessPlan);   // full 7-day plan
+router.post("/day-workout", auth, getDayWorkout);    // specific day + muscle group
+router.get("/diet",         auth, getDietPlan);      // diet plan (dedicated)
+router.delete("/regenerate",auth, regeneratePlan);   // clear on goal change
 
 module.exports = router;
