@@ -1,5 +1,7 @@
 # 💪 FitAI – AI-Powered Fitness Assistant
 
+![Landing](assets/screenshots/landing.jpeg)
+
 FitAI is an intelligent fitness platform designed for beginners and fitness enthusiasts.
 It generates **personalized workout plans and diet recommendations** based on user inputs like height, weight, age, gender, and fitness goals.
 
