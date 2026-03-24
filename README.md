@@ -1,25 +1,129 @@
 # 💪 FitAI – AI-Powered Fitness Assistant
 
-![Landing](assets/screenshots/landing.jpeg)
-
-FitAI is an intelligent fitness platform designed for beginners and fitness enthusiasts.
-It generates **personalized workout plans and diet recommendations** based on user inputs like height, weight, age, gender, and fitness goals.
-
-The system integrates **AI, voice interaction, and real-time pose estimation** to guide users without needing a personal trainer.
+FitAI is an intelligent fitness platform that helps users **train smarter without a personal trainer**.
+It generates **AI-powered workout plans, diet recommendations, real-time form correction, and voice-based guidance**.
 
 ---
 
-## 🚀 Features
+## 🚀 Experience the Product
 
-* 🔐 User Authentication (Login / Signup)
-* 🏋️ AI-Based Workout Plan Generation (Muscle Gain / Fat Loss / Maintenance)
-* 🥗 Personalized Diet Plans (Veg & Non-Veg)
-* 📊 Meal Logging with Calorie Tracking
-* 📈 Workout History Tracking *(in progress)*
-* 🤖 AI Chatbot (FitAI Coach for daily guidance)
-* 🎤 Voice Assistant (Speech-to-Text using Whisper)
-* 🧍 Real-Time Pose Estimation (MediaPipe + OpenCV)
-* ⚡ AI Feedback for Exercise Form Correction
+### 🏠 Landing & Introduction
+
+![Landing](assets/screenshots/landing.jpeg)
+
+Clean and modern UI introducing FitAI with focus on **hands-free fitness and AI-powered training**.
+
+---
+
+### 🚀 AI Demo Experience
+
+![Demo](assets/screenshots/demo.jpeg)
+
+Shows the **future of training** with real-time motion tracking and AI-powered analysis.
+
+---
+
+## 🔐 Authentication System
+
+### 📝 Signup Page
+
+![Signup](assets/screenshots/signup.jpeg)
+
+Users can create an account securely with validation.
+
+### 🔑 Login Page
+
+![Login](assets/screenshots/login.jpeg)
+
+Secure login system with session handling and authentication.
+
+---
+
+## 📊 Personalized Dashboard
+
+![Dashboard](assets/screenshots/dashboard.png)
+
+* Displays user profile (height, weight, goal)
+* AI-generated daily workout
+* Nutrition tracking summary
+* Quick access to all features
+
+---
+
+## 🏋️ AI Workout + Pose Correction
+
+### ▶️ Workout Start & Instructions
+
+![Workout Start](assets/screenshots/workout-start.jpeg)
+
+Provides instructions before starting exercise to ensure correct setup.
+
+---
+
+### 🧍 Real-Time Pose Estimation
+
+![Pose Estimation](assets/screenshots/pose-estimation.jpeg)
+
+* Uses **MediaPipe (33 body landmarks)**
+* Tracks movement in real-time
+* Counts reps and evaluates posture
+
+---
+
+### ⚡ AI Feedback System
+
+* Detects incorrect form
+* Provides real-time correction suggestions
+* Ensures safe and effective workouts
+
+---
+
+## 🥗 AI Diet Recommendation System
+
+### 🌱 Vegetarian Plan
+
+![Diet Veg](assets/screenshots/diet-veg.png)
+
+### 🍗 Non-Vegetarian Plan
+
+![Diet NonVeg](assets/screenshots/diet-nonveg.png)
+
+* Personalized diet based on goal
+* Calorie tracking
+* Macro distribution (protein, carbs, fats)
+
+---
+
+## 🤖 FitAI Chatbot
+
+![Chatbot](assets/screenshots/chatbot.png)
+
+* Answers fitness-related queries
+* Gives personalized suggestions
+* Acts as your **daily AI coach**
+
+---
+
+## 🎤 Voice AI Assistant
+
+![Voice 1](assets/screenshots/voice-1.png)
+
+![Voice 2](assets/screenshots/voice-2.png)
+
+![Voice 3](assets/screenshots/voice-3.png)
+
+* Powered by **OpenAI Whisper (Speech-to-Text)**
+* Ask fitness questions using voice
+* Get intelligent AI responses instantly
+
+---
+
+## 🗄️ Database (MongoDB Atlas)
+
+![Database](assets/screenshots/database.png)
+
+* Stores users, workout plans, and progress
+* Scalable cloud-based database
 
 ---
 
@@ -40,45 +144,31 @@ The system integrates **AI, voice interaction, and real-time pose estimation** t
 
 * Python (Flask)
 * OpenRouter API (`meta-llama/llama-3-8b-instruct`)
-* OpenAI Whisper (Speech-to-Text)
-* FFmpeg (Audio Processing)
-* MediaPipe + OpenCV (Pose Estimation)
+* OpenAI Whisper
+* FFmpeg
+* MediaPipe + OpenCV
 
 ---
 
-## ⚙️ Project Structure
+## ⚙️ How It Works
 
-```
-fitness-ai-project/
-│
-├── backend/
-├── frontend/
-├── stt-ai-service/
-├── workout-ai-service/
-```
-
----
-
-## 🔄 How It Works
-
-1. User enters personal details & selects a fitness goal
-2. Backend processes request and sends it to AI services
+1. User enters personal details + fitness goal
+2. Backend sends data to AI services
 3. AI generates:
 
-   * Personalized workout plan
-   * Customized diet plan
-4. User can:
+   * Workout Plan
+   * Diet Plan
+4. User interacts via:
 
-   * Log meals and track calories
-   * Chat with AI fitness coach
-   * Use voice assistant for queries
-   * Perform exercises with real-time pose correction
+   * Chatbot
+   * Voice assistant
+   * Real-time workout tracking
 
 ---
 
-## 🧑‍💻 Setup Guide (Run Locally)
+## 🧑‍💻 Run Locally
 
-### 1️⃣ Clone Repository
+### 1️⃣ Clone
 
 ```bash
 git clone https://github.com/PrasannaGandhi/fitness-ai-project.git
@@ -87,23 +177,23 @@ cd fitness-ai-project
 
 ---
 
-## 🔹 Backend Setup
+### 2️⃣ Backend
 
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file inside `backend` folder:
+Create `.env`:
 
 ```
 PORT=5000
-MONGO_URI=your_mongodb_atlas_url
-JWT_SECRET=your_secret_key
-OPENROUTER_API_KEY=your_api_key
+MONGO_URI=your_mongodb_url
+JWT_SECRET=your_secret
+OPENROUTER_API_KEY=your_key
 ```
 
-Run backend:
+Run:
 
 ```bash
 npm start
@@ -111,7 +201,7 @@ npm start
 
 ---
 
-## 🔹 Frontend Setup
+### 3️⃣ Frontend
 
 ```bash
 cd frontend
@@ -121,24 +211,24 @@ npm run dev
 
 ---
 
-## 🔹 Speech-to-Text AI Service
+### 4️⃣ AI Services
+
+#### STT Service
 
 ```bash
 cd stt-ai-service
 python -m venv venv
-venv\Scripts\activate   # For Windows
+venv\Scripts\activate
 pip install -r requirements.txt
 python stt_app.py
 ```
 
----
-
-## 🔹 Workout AI Service
+#### Workout AI
 
 ```bash
 cd workout-ai-service
 python -m venv venv
-venv\Scripts\activate   # For Windows
+venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
 ```
@@ -149,20 +239,20 @@ python app.py
 
 * `node_modules` and `venv` are not included → install dependencies manually
 * MongoDB Atlas must be configured before running backend
-* Add your own API keys in `.env` file
-* Run backend and AI services before starting frontend
+* Add your own API keys in `.env`
+* Run backend + AI services before frontend
 
 ---
 
 ## 🤝 Collaboration Guide
 
-### Pull latest changes:
+Pull latest:
 
 ```bash
 git pull origin main
 ```
 
-### Push your changes:
+Push changes:
 
 ```bash
 git add .
@@ -172,13 +262,13 @@ git push
 
 ---
 
-## 🌟 Unique Highlights
+## 🌟 Key Highlights
 
-* Real-time **pose estimation using MediaPipe (33 body landmarks)**
-* AI-powered **form correction with feedback system**
-* Voice-based interaction using **OpenAI Whisper**
-* Fully AI-driven recommendations using **LLaMA 3 model via OpenRouter**
-* Eliminates need for beginner gym trainer guidance
+* 🔥 Real-time pose estimation with AI feedback
+* 🎤 Voice-controlled fitness assistant
+* 🧠 LLaMA 3 powered recommendations
+* 🥗 Personalized diet + workout system
+* 🤖 Intelligent chatbot guidance
 
 ---
 
